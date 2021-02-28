@@ -48,6 +48,7 @@ void usage(const char* argv0)
 #endif
     printf("   -p      use symmetric pairs (faster but unsorted output)\n");
     printf("   -c      print polynomials amended with count of taps\n");
+    printf("   -2      search for polynomials with only 2 taps for specified order\n");
     printf("   -m int  print only polynomials with number of taps <= this value\n");
     printf("           default is -1, to print all polynomials\n");
     printf("   -s int  start with specified polynomial (order is computed, not required)\n");
@@ -145,6 +146,41 @@ int TestSinglePolynomial(const char str[], int verbosity=0)
     std::cout << std::resetiosflags(std::ios::showbase | std::ios::basefield);
     return result;
 }
+
+template<typename poly_t, typename uintT, typename fltT>
+//-----------------------------------------------------------------------------
+unsigned FindTwoTapPolynomials(unsigned order, int verbosity=0)
+//-----------------------------------------------------------------------------
+{
+    LFSRPolynomial<poly_t> poly(order);
+    MLPolyTester<poly_t,uintT,fltT> polyTester(poly.Order(),verbosity);
+    unsigned n_results = 0;
+    int result;
+
+    std::cout << std::hex << std::resetiosflags(std::ios::showbase | std::ios::basefield);
+    for (unsigned k = 0; k < order -1; ++k)
+    {
+        poly.Clear();
+        poly.set(order -1, 1);
+        poly.set(k, 1);
+
+        result = polyTester.TestPolynomial(poly);
+        if (result)
+            continue;
+        ++n_results;
+        std::cout << std::dec << n_results << ": 0x" << poly;
+        if (verbosity >= 1) {
+            const unsigned n_taps_set = poly.NumBitsSet();
+            std::cout << "\t# " << std::dec << n_taps_set;
+            if (verbosity >= 2)
+                std::cout << ": 0," << k+1 << "," << order;
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::dec;
+    return n_results;
+}
+
 
 template<typename poly_t, typename uintT, typename fltT>
 //-----------------------------------------------------------------------------
@@ -297,11 +333,12 @@ int main(int argc, char* const argv[])
     bool inPairs = 0;
     bool doRandom = 0;
     bool printCountTaps = false;
+    bool findTwoTaps = false;
     const char* startVal = 0;
     const char* endVal = 0;
     unsigned long numPolys = 0;
     
-    while ((c = getopt(argc, argv, "vbprs:e:n:t:m:ch?")) != -1) {
+    while ((c = getopt(argc, argv, "vbprs:e:n:t:m:2ch?")) != -1) {
         switch (c) {
             case 't':
                 if (!bignum) {
@@ -321,6 +358,9 @@ int main(int argc, char* const argv[])
                 break;
             case 'm':
                 maximum_taps = atoi(optarg);
+                break;
+            case '2':
+                findTwoTaps = true;
                 break;
             case 's':
                 startVal = optarg;
@@ -394,6 +434,19 @@ int main(int argc, char* const argv[])
 #endif
         std::cerr << std::endl;
         return -1;
+    }
+
+    if (findTwoTaps) {
+        unsigned n_results = 0;
+        if (!bignum)
+            n_results = FindTwoTapPolynomials<reg_poly_t,reg_uint_t,reg_float_t>(order, verbosity);
+#ifdef USING_GMP
+        else
+            n_results += FindTwoTapPolynomials<big_poly_t,big_uint_t,big_float_t>(order, verbosity);
+#endif
+        std::cout << "found " << std::dec << n_results << " polynomials with 2 taps, order "
+            << order << " and maximal length" << std::endl;
+        return 0;
     }
 
     if (doRandom) {

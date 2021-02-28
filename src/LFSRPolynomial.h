@@ -46,6 +46,7 @@ class LFSRPolynomial {
 
     void SetRandom(void);
     void SetMax(void);
+    void Clear(void);
 
     void printAsHex(std::ostream& os) const;
     void printAsPoly(std::ostream& os) const;
@@ -225,6 +226,18 @@ void LFSRPolynomial<poly_t>::SetMax(void)
         poly.set(i,1);
     }
 }
+
+template<typename poly_t>
+//-----------------------------------------------------------------------------
+void LFSRPolynomial<poly_t>::Clear(void)
+//-----------------------------------------------------------------------------
+{
+    poly = poly_t(1)<<(numBits-1);
+    for (unsigned i=0; i<numBits-1; i++) {
+        poly.set(i,0);
+    }
+}
+
 
 template<typename poly_t>
 //-----------------------------------------------------------------------------

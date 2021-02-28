@@ -5,15 +5,16 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <stdint.h>
 
 /*
  * LFSR - Linear Feedback Shift Register.
- * lfsr finds length polynomials for linear feedback shift registers
+ * lfsr_s finds length polynomials for linear feedback shift registers
  * Supposedly, there's an easier way to do this using finite field theory, 
  * but in the few cases I checked, they were flawed.
  *
- * I suspect that it's easy to find primitive polyinomials, but
- * what's needed is irreducible polyinomials, and that those are
+ * I suspect that it's easy to find primitive polynomials, but
+ * what's needed is irreducible polynomials, and that those are
  * hard to find.  Still, I hope to some day find a program that
  * can solve 2048 bits polys as fast as this one finds 16 bit.
  *
@@ -85,16 +86,17 @@
  15 shifts (255/17) do not bring us back.
  
  -------
- For speed, this version is limited to polys that fit in a long
+ For speed, this version is limited to polys that fit in a uint64_t
+ (was: long, which usually compiles to 32 bit integer).
  There is a version that will find polys up to 512 bits, and 
  'probable' polys for even larger bit sizes, but this isn't it.
 
  */
 
 #define uchar unsigned char
-#define ulong unsigned long
+#define ulong uint64_t
 
-#define MAXIMUM_NUMBER_OF_BITS 32
+#define MAXIMUM_NUMBER_OF_BITS 64
 #define TOPBIT  ((ulong)1<<(MAXIMUM_NUMBER_OF_BITS-1))
 
 int number_of_bits;
@@ -105,16 +107,27 @@ ulong t_matrix[MAXIMUM_NUMBER_OF_BITS];
 
 uchar taps[MAXIMUM_NUMBER_OF_BITS];
 
-#define MAX_FACTORS 37
+/* this was 37 for MAXIMUM_NUMBER_OF_BITS = 32
+ * not knowing what i'm doing .. i increased this a bit!
+ */
+#define MAX_FACTORS 64
 ulong bdfactors[MAX_FACTORS];
 
 int number_of_factors = 0;
 int verbose_mode = 10;
+int limit_max_taps = -1;
+int dot_filtered = 1;
+int skipped_since_last_print = 0;
 
 void note(int priority, char *fmt, ...) 
 {
    va_list ap;
-   char buff[200];
+   char buff[512];
+
+   if (skipped_since_last_print) {
+      printf("\n");
+      skipped_since_last_print = 0;
+   }
 
    if (priority < verbose_mode) {
       va_start(ap, fmt);
@@ -169,7 +182,20 @@ void find_factors(int order) {
 }
 
 void dump_taps(void) {
-   int i, j;
+   int i, j, n_taps;
+   n_taps = 0;
+
+   for (i=0; i<number_of_bits; i++) {
+      if (taps[i])
+         ++n_taps;
+   }
+   if (0 <= limit_max_taps && limit_max_taps < n_taps) {
+	  if (dot_filtered) {
+	     ++skipped_since_last_print;
+         printf(".");
+      }
+      return;
+   }
 
    note(1, "$");
    for (i= ((number_of_bits-1) & 0xfffc); i>=0 ; i-=4) {
@@ -181,7 +207,7 @@ void dump_taps(void) {
       note(1, "%x", j);
    }
 
-   note(1, ": 0");
+   note(1, ": #=%2d: 0", n_taps);
    for (i=0; i<number_of_bits; i++) {
       if (taps[i]) {
          note(1, ",%d", i+1);
@@ -191,7 +217,20 @@ void dump_taps(void) {
 }
    
 void dump_pair(void) {
-   int i, j;
+   int i, j, n_taps;
+   n_taps = 0;
+
+   for (i=0; i<number_of_bits; i++) {
+      if (taps[i])
+         ++n_taps;
+   }
+   if (0 <= limit_max_taps && limit_max_taps < n_taps) {
+	  if (dot_filtered) {
+	     ++skipped_since_last_print;
+         printf(".");
+      }
+      return;
+   }
 
    note(1, "$");
    j = 1;
@@ -209,7 +248,7 @@ void dump_pair(void) {
       note(1, "%x", j);
    }
 
-   note(1, ": ");
+   note(1, ": #=%2d: ", n_taps);
    for (i=number_of_bits-1; i>=0; i--) {
       if (taps[i]) {
          note(1, "%d,", number_of_bits-(i+1));
@@ -357,10 +396,14 @@ int main(int argc, char *argv[]) {
    int start_time, end_time;
    ulong bad_pos;
 
-   if (argc < 2) {
-      printf("Maximal length Linear Feedback Shift Register tool (%d bits max), Version 1.1 Oct 29, 1999\n", MAXIMUM_NUMBER_OF_BITS);
-      printf("Usage: lfsr_s <Order>\n");
+   if (argc < 2 || ( 1 < argc && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "-?")) )) {
+      printf("Maximal length Linear Feedback Shift Register tool (%d bits max), Version 1.2 Feb 28, 2021\n", MAXIMUM_NUMBER_OF_BITS);
+      printf("Usage: lfsr_s <Order> [<maxtaps> [<dot_filtered>]]\n");
       printf("  <Order> - the number of bits in the LFSR\n");
+      printf("  <maxtaps> - don't output LFSR combinations with more than this number of taps\n");
+      printf("              default: -1, to print all combinations\n");
+      printf("  <dot_filtered> - print a '.' when a combination is not output (default: 1)\n");
+      printf("                   set '0' to remove the dots\n");
       return 0;
    }
 
@@ -372,10 +415,16 @@ int main(int argc, char *argv[]) {
       return 0;
    }
 
+   if (2 < argc)
+      limit_max_taps = atoi(argv[2]);
+
    set_taps(number_of_bits);
 
-   if (argc > 2) {
+   if (2 < argc) {
       verbose_mode = atoi(argv[2]);
+   }
+   if (3 < argc) {
+      dot_filtered = atoi(argv[3]);
    }
 
    note(1, "Order %d, using the 'in pairs' search method.\n", number_of_bits);
@@ -435,7 +484,7 @@ int main(int argc, char *argv[]) {
 
    }
    end_time = time(0l);
-   note(0, "Elasped seconds = %d\n", end_time - start_time);
+   note(0, "Elapsed seconds = %d\n", end_time - start_time);
    note(3, "attempts = %lu\n", attempts);
    note(3, "number which passed first, but failed subsequent checks %lu\n", bad_pos);
    note(0, "count = %lu\n", count);

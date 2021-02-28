@@ -47,6 +47,9 @@ void usage(const char* argv0)
     printf("   -b      use bignum library (GMP), may be auto-selected by order\n");
 #endif
     printf("   -p      use symmetric pairs (faster but unsorted output)\n");
+    printf("   -c      print polynomials amended with count of taps\n");
+    printf("   -m int  print only polynomials with number of taps <= this value\n");
+    printf("           default is -1, to print all polynomials\n");
     printf("   -s int  start with specified polynomial (order is computed, not required)\n");
     printf("   -e int  end with specified polynomial (order is computed, not required)\n");
     printf("   -n int  stop after specified number of ML polynomials\n");
@@ -176,7 +179,7 @@ int GenerateRandomPolys(unsigned long order, unsigned long numRands, int verbosi
 
 template<typename poly_t, typename uintT, typename fltT>
 //-----------------------------------------------------------------------------
-int GeneratePolySequence(unsigned long order, const char* startVal, const char* endVal, unsigned long numPolys, bool inPairs, int verbosity=0)
+int GeneratePolySequence(unsigned long order, const char* startVal, const char* endVal, unsigned long numPolys, bool inPairs, int verbosity=0, bool printCountTaps =false, int maximum_taps =-1)
 //-----------------------------------------------------------------------------
 {
     LFSRPolynomial<poly_t> poly(order?order:1); // use a dummy when !order
@@ -251,11 +254,17 @@ int GeneratePolySequence(unsigned long order, const char* startVal, const char* 
         }
         int result = polyTester.TestPolynomial(poly);
         if (!result) {
-            std::cout << poly << std::endl;
-            polysFound++;
-            if (inPairs && (poly.IsAsymmetric()==-1)) { // is asymmetric and has more lower bits
-                std::cout << poly.SymmetricDual() << std::endl;
+            const unsigned n_taps_set = poly.NumBitsSet();
+            if (maximum_taps == -1 || n_taps_set <= maximum_taps) {
+                if (!printCountTaps)
+                    std::cout << poly << std::endl;
+                else
+                    std::cout << poly << "\t# " << std::dec << n_taps_set << std::endl;
                 polysFound++;
+                if (inPairs && (poly.IsAsymmetric()==-1)) { // is asymmetric and has more lower bits
+                    std::cout << poly.SymmetricDual() << std::endl;
+                    polysFound++;
+                }
             }
         }
         poly.next_candidate();
@@ -284,13 +293,15 @@ int main(int argc, char* const argv[])
     int verbosity = 0;
     int result = 0;
     int tested = 0;
+    int maximum_taps = -1;
     bool inPairs = 0;
     bool doRandom = 0;
+    bool printCountTaps = false;
     const char* startVal = 0;
     const char* endVal = 0;
     unsigned long numPolys = 0;
     
-    while ((c = getopt(argc, argv, "vbprs:e:n:t:h?")) != -1) {
+    while ((c = getopt(argc, argv, "vbprs:e:n:t:m:ch?")) != -1) {
         switch (c) {
             case 't':
                 if (!bignum) {
@@ -304,6 +315,12 @@ int main(int argc, char* const argv[])
                 break;
             case 'r':
                 doRandom = 1;
+                break;
+            case 'c':
+                printCountTaps = true;
+                break;
+            case 'm':
+                maximum_taps = atoi(optarg);
                 break;
             case 's':
                 startVal = optarg;
@@ -393,10 +410,10 @@ int main(int argc, char* const argv[])
     }
     
     if (!bignum) {
-        return GeneratePolySequence<reg_poly_t,reg_uint_t,reg_float_t>(order,startVal,endVal,numPolys,inPairs,verbosity);
+        return GeneratePolySequence<reg_poly_t,reg_uint_t,reg_float_t>(order,startVal,endVal,numPolys,inPairs,verbosity,printCountTaps,maximum_taps);
 #ifdef USING_GMP
     } else {
-        return GeneratePolySequence<big_poly_t,big_uint_t,big_float_t>(order,startVal,endVal,numPolys,inPairs,verbosity);
+        return GeneratePolySequence<big_poly_t,big_uint_t,big_float_t>(order,startVal,endVal,numPolys,inPairs,verbosity,printCountTaps,maximum_taps);
 #endif
     }
 }

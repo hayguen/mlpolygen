@@ -20,8 +20,11 @@
 cmake_minimum_required(VERSION 2.6)
 project(mlpolygen)
 
+option(WITHOUT_GMP "do not use GMP, the GNU Multiple Precision Arithmetic Library?" OFF)
+
+
 # set the reported version for mlpolygen
-add_definitions("-DMLPOLYGEN_VERSION=\"1.0.2\"")
+add_definitions("-DMLPOLYGEN_VERSION=\"1.1.0\"")
 
 # fetch the mercurial repo version, if possible
 execute_process(

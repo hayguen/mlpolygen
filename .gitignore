@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+
+# from .hgignore
+test/files/
+test/mlpoly[0-9]+\.[mk|txt]
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+mlpolygen
+PrimeFactorizer

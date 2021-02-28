@@ -37,6 +37,20 @@ endif (HG_REVISION)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 
+if ( CMAKE_C_COMPILER_ID MATCHES "MSVC" )
+  # using Visual Studio C++
+  message(STATUS "INFO: detected MSVC: will not link math lib m")
+  set(MATHLIB "")
+
+  add_definitions("/D_CRT_SECURE_NO_WARNINGS")
+  set(MSVC_DISABLED_WARNINGS_LIST "C4996")
+
+else()
+  message(STATUS "INFO: detected NO MSVC: ${CMAKE_C_COMPILER_ID}: will link math lib m")
+  set(MATHLIB "m")
+endif()
+
+
 if (NOT WITHOUT_GMP)
     find_package(GMP)
     find_package(GMPXX)
@@ -60,6 +74,14 @@ if (GMPXX_FOUND)
     add_definitions( -DUSING_GMP=1 )
 endif (GMPXX_FOUND)
 
-set(CMAKE_BUILD_TYPE Release)
+target_link_libraries(lfsr_s ${MATHLIB})
+
+########################################################################
+# select the release build type by default to get optimization flags
+########################################################################
+if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE "Release")
+   message(STATUS "Build type not specified: defaulting to release.")
+endif(NOT CMAKE_BUILD_TYPE)
 
 install(TARGETS mlpolygen RUNTIME DESTINATION bin)

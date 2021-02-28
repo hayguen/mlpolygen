@@ -53,6 +53,7 @@ To follow this approach::
 
 Normally, MLPolyGen requires GMP_ to build so that it can support numbers larger than 64 bits.
 If GMP_ is present on your system, CMake will automatically detect and use it.
+On Ubuntu 20.04.2 LTS, the required package is ``libgmp-dev``.
 If you would like to disable the dependency on GMP_,
 run CMake using the WITHOUT_GMP option as follows::
 

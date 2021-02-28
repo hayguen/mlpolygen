@@ -26,6 +26,8 @@
 
 #include "MLPolyTester.h"
 
+#include <getopt.h>
+
 #include <deque>
 #include <stdio.h>
 #include <iomanip>
@@ -288,7 +290,7 @@ int main(int argc, char* const argv[])
     const char* endVal = 0;
     unsigned long numPolys = 0;
     
-    while ((c = getopt(argc, argv, "vbprs:e:n:t:?")) != -1) {
+    while ((c = getopt(argc, argv, "vbprs:e:n:t:h?")) != -1) {
         switch (c) {
             case 't':
                 if (!bignum) {
@@ -329,6 +331,7 @@ int main(int argc, char* const argv[])
                 verbosity++;
                 break;
             case '?':
+            case 'h':
                 usage(argv[0]);
                 return 0;
             default:

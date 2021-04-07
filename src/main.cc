@@ -30,6 +30,7 @@
 
 #include <deque>
 #include <stdio.h>
+#include <assert.h>
 #include <iomanip>
 
 #ifndef MLPOLYGEN_VERSION
@@ -49,6 +50,10 @@ void usage(const char* argv0)
     printf("   -p      use symmetric pairs (faster but unsorted output)\n");
     printf("   -c      print polynomials amended with count of taps\n");
     printf("   -2      search for polynomials with only 2 taps for specified order\n");
+    printf("   -u int  shiftUp: for option '-f': first enabled tap. default: 0\n");
+    printf("   -f int  bruteForce: how many taps(bits) should be tested sequenctially:\n");
+    printf("           all possible combinations for taps u .. u+f-1 are tested\n");
+    printf("           default: 0 for off. limitation: all taps need to fit into 64 Bits!\n");
     printf("   -m int  print only polynomials with number of taps <= this value\n");
     printf("           default is -1, to print all polynomials\n");
     printf("   -s int  start with specified polynomial (order is computed, not required)\n");
@@ -174,6 +179,74 @@ unsigned FindTwoTapPolynomials(unsigned order, int verbosity=0)
             std::cout << "\t# " << std::dec << n_taps_set;
             if (verbosity >= 2)
                 std::cout << ": 0," << k+1 << "," << order;
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::dec;
+    return n_results;
+}
+
+template<typename poly_t, typename uintT, typename fltT>
+//-----------------------------------------------------------------------------
+unsigned BruteForceFindPolynomials(int shiftUp, int bruteForceNumBits, unsigned order, int verbosity=0)
+//-----------------------------------------------------------------------------
+{
+    if (order > 64) {
+        std::cerr << "order = " << order
+            << ": only values <= 64 supported!" << std::endl;
+        return 0;
+    }
+    if (shiftUp < 0) {
+        std::cerr << "shiftUp = " << shiftUp
+            << ": only values >= 0 supported!" << std::endl;
+        return 0;
+    }
+    if (bruteForceNumBits <= 0) {
+        std::cerr << "bruteForceNumBits = " << bruteForceNumBits
+            << ": only values > 0 supported!" << std::endl;
+        return 0;
+    }
+    if (shiftUp+bruteForceNumBits >= order) {
+        std::cerr << "shiftUp + bruteForceNumBits = " << shiftUp + bruteForceNumBits
+            << ": only values < 'order' supported!" << std::endl;
+        return 0;
+    }
+
+    LFSRPolynomial<poly_t> poly(order);
+    MLPolyTester<poly_t,uintT,fltT> polyTester(poly.Order(),verbosity);
+    unsigned n_results = 0;
+    int result;
+
+    std::cout << std::hex << std::resetiosflags(std::ios::showbase | std::ios::basefield);
+    uint64_t forceNmax = 0;
+    for (unsigned k = 0; k < bruteForceNumBits; ++k)
+        forceNmax |= (uint64_t(1) << k);
+    for (uint64_t comb = 1; comb <= forceNmax; ++comb)
+    {
+        poly.Clear();
+        poly.set(order -1, 1);
+        for (unsigned k = 0; k < bruteForceNumBits; ++k) {
+            if ( (comb >> k) & 1 ) {
+                assert( shiftUp + k != order -1 );
+                poly.set(shiftUp + k, 1);
+            }
+        }
+
+        result = polyTester.TestPolynomial(poly);
+        if (result)
+            continue;
+        ++n_results;
+        std::cout << std::dec << n_results << ": 0x" << poly;
+        if (verbosity >= 1) {
+            const unsigned n_taps_set = poly.NumBitsSet();
+            std::cout << "\t# " << std::dec << n_taps_set;
+            if (verbosity >= 1) {
+                std::cout << ": 0";
+                for (unsigned k = 0; k < order; ++k) {
+                    if (poly[k])
+                        std::cout << "," << k+1;
+                }
+            }
         }
         std::cout << std::endl;
     }
@@ -330,6 +403,8 @@ int main(int argc, char* const argv[])
     int result = 0;
     int tested = 0;
     int maximum_taps = -1;
+    int shiftUp = 0;
+    int bruteForceNumBits = 0;
     bool inPairs = 0;
     bool doRandom = 0;
     bool printCountTaps = false;
@@ -338,7 +413,7 @@ int main(int argc, char* const argv[])
     const char* endVal = 0;
     unsigned long numPolys = 0;
     
-    while ((c = getopt(argc, argv, "vbprs:e:n:t:m:2ch?")) != -1) {
+    while ((c = getopt(argc, argv, "vbprs:e:n:t:m:u:f:2ch?")) != -1) {
         switch (c) {
             case 't':
                 if (!bignum) {
@@ -358,6 +433,12 @@ int main(int argc, char* const argv[])
                 break;
             case 'm':
                 maximum_taps = atoi(optarg);
+                break;
+            case 'u':
+                shiftUp = atoi(optarg);
+                break;
+            case 'f':
+                bruteForceNumBits = atoi(optarg);
                 break;
             case '2':
                 findTwoTaps = true;
@@ -446,6 +527,20 @@ int main(int argc, char* const argv[])
 #endif
         std::cout << "found " << std::dec << n_results << " polynomials with 2 taps, order "
             << order << " and maximal length" << std::endl;
+        return 0;
+    }
+
+    if (bruteForceNumBits) {
+        unsigned n_results = 0;
+        if (!bignum)
+            n_results = BruteForceFindPolynomials<reg_poly_t,reg_uint_t,reg_float_t>(shiftUp, bruteForceNumBits, order, verbosity);
+#ifdef USING_GMP
+        else
+            n_results += BruteForceFindPolynomials<big_poly_t,big_uint_t,big_float_t>(shiftUp, bruteForceNumBits, order, verbosity);
+#endif
+        std::cout << "found " << std::dec << n_results << " polynomials with all taps - except top - in "
+            << shiftUp << " .. " << shiftUp + bruteForceNumBits
+            << " of order " << order << " and maximal length" << std::endl;
         return 0;
     }
 

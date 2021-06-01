@@ -10,7 +10,7 @@
 /*
  * LFSR - Linear Feedback Shift Register.
  * lfsr_s finds length polynomials for linear feedback shift registers
- * Supposedly, there's an easier way to do this using finite field theory, 
+ * Supposedly, there's an easier way to do this using finite field theory,
  * but in the few cases I checked, they were flawed.
  *
  * I suspect that it's easy to find primitive polynomials, but
@@ -18,7 +18,7 @@
  * hard to find.  Still, I hope to some day find a program that
  * can solve 2048 bits polys as fast as this one finds 16 bit.
  *
- * This program picks a poly, and then uses "that cordic nonsense" 
+ * This program picks a poly, and then uses "that cordic nonsense"
  * to prove it's maximal length.  Approximately 1/16 of the chosen
  * polys are maximal length.
  *
@@ -46,10 +46,10 @@
  We could write down the equations of each bit thus:
  0 shifts = a b c d e f g h
  1 shift  = h a b c^h d e^h f^h g
- 2 shitfs = g h a b^g c^h d^g e^h^g f^h 
+ 2 shitfs = g h a b^g c^h d^g e^h^g f^h
 
  For some equations, this blows up rapidily, but lfsr use only xor.
- a^a cancles a, so each position has, at most, N terms.  
+ a^a cancles a, so each position has, at most, N terms.
  For 512 bits this is still 512*512 bits, but that's less than
  a megabyte, which is quite manageable for computers these days.
 
@@ -82,13 +82,13 @@
  For 8 bits, we need to know all the factors of 2**8-1.
  2**8-1 is 255, it's prime factors are 3, 5, and 17.
  After testing that 255 shifts brings us back to the beginning,
- we check that 85 shifts (255/3), 51 shitfs (255/5) and 
+ we check that 85 shifts (255/3), 51 shitfs (255/5) and
  15 shifts (255/17) do not bring us back.
- 
+
  -------
  For speed, this version is limited to polys that fit in a uint64_t
  (was: long, which usually compiles to 32 bit integer).
- There is a version that will find polys up to 512 bits, and 
+ There is a version that will find polys up to 512 bits, and
  'probable' polys for even larger bit sizes, but this isn't it.
 
  */
@@ -119,7 +119,7 @@ int limit_max_taps = -1;
 int dot_filtered = 1;
 int skipped_since_last_print = 0;
 
-void note(int priority, char *fmt, ...) 
+void note(int priority, char *fmt, ...)
 {
    va_list ap;
    char buff[512];
@@ -144,7 +144,7 @@ void note(int priority, char *fmt, ...)
  * This divides by all the odd numbers less than the square root,
  * (We can skip 2, since it can't possibly be even)
  * Not the fastest way, but one of the smallest.  :)
- * 
+ *
  */
 
 void find_factors(int order) {
@@ -215,7 +215,7 @@ void dump_taps(void) {
    }
    note(1, "\n");
 }
-   
+
 void dump_pair(void) {
    int i, j, n_taps;
    n_taps = 0;
@@ -278,7 +278,7 @@ void do_feedback_m(void) {
 
 void copy_matrix(ulong dest[], ulong src[]) {
    int i;
-   
+
    for (i=0; i<number_of_bits; i++) {
       dest[i] = src[i];
    }
@@ -396,7 +396,7 @@ int main(int argc, char *argv[]) {
    int start_time, end_time;
    ulong bad_pos;
 
-   if (argc < 2 || ( 1 < argc && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "-?")) )) {
+   if (argc < 2 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "-?")) {
       printf("Maximal length Linear Feedback Shift Register tool (%d bits max), Version 1.2 Feb 28, 2021\n", MAXIMUM_NUMBER_OF_BITS);
       printf("Usage: lfsr_s <Order> [<maxtaps> [<dot_filtered>]]\n");
       printf("  <Order> - the number of bits in the LFSR\n");
@@ -479,7 +479,7 @@ int main(int argc, char *argv[]) {
       }
       fails:
 
-      if (next_poly()) 
+      if (next_poly())
          break;
 
    }

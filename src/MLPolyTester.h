@@ -30,6 +30,11 @@
 
 #include <stdint.h>
 
+
+#ifdef _MSC_VER
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
 //-----------------------------------------------------------------------------
 class MLPolyTesterBase {
   public:

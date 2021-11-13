@@ -25,7 +25,11 @@
 #endif
 
 #include "PrimeFactorizer.h"
+
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include <iostream>
 
@@ -96,9 +100,11 @@ int main_args(int argc, char* const argv[])
 int main(int argc, char* const argv[])
 //-----------------------------------------------------------------------------
 {
-    int c;
     int bignum = 0;
-    
+
+#ifndef _MSC_VER
+    int c;
+
     while ((c = getopt(argc, argv, "b?")) != -1) {
         switch (c) {
 #ifdef USING_GMP
@@ -116,7 +122,17 @@ int main(int argc, char* const argv[])
     }
     argc -= optind;
     argv += optind;
-    
+#else
+    for (int argidx = 1; argidx < argc; ++argidx)
+    {
+        if (!strcmp(argv[argidx], "-?") || !strcmp(argv[argidx], "-h"))
+        {
+            usage(argv[0]);
+            return 0;
+        }
+    }
+#endif
+
     int interactive = !argc;
     
     if (interactive && !bignum) {

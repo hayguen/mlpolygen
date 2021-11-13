@@ -26,7 +26,7 @@
 
 #include "MLPolyTester.h"
 
-#include <getopt.h>
+#include <cargs.h>
 
 #include <deque>
 #include <stdio.h>
@@ -37,43 +37,53 @@
 #define MLPOLYGEN_VERSION "UNKNOWN"
 #endif
 
+static struct cag_option options[] = {
+#ifdef USING_GMP
+    {'b', "b", NULL, NULL, "use bignum library (GMP), may be auto-selected by order" },
+#endif
+    {'p', "p", NULL, NULL, "use symmetric pairs (faster but unsorted output)"},
+    {'c', "c", NULL, NULL, "print polynomials amended with count of taps"},
+    {'2', "2", NULL, NULL, "search for polynomials with only 2 taps for specified order"},
+
+    {'u', "u", NULL, "shiftUp", "for option '-f': first enabled tap. default: 0"},
+    {'f', "f", NULL, "bits",
+        "bruteForce: how many taps(bits) should be tested sequenctially:\n"
+        "\tall possible combinations for taps u .. u+f-1 are tested\n"
+        "\tdefault: 0 for off.limitation : all taps need to fit into 64 Bits!"},
+    {'m', "m", NULL, "int",
+        "print only polynomials with number of taps <= this value\n"
+        "\tdefault is -1, to print all polynomials"},
+    {'s', "s", NULL, "start",
+        "start with specified polynomial (order is computed, not required)"},
+    {'e', "e", NULL, "end",
+        "end with specified polynomial (order is computed, not required)"},
+    {'n', "n", NULL, "number",
+        "stop after specified number of ML polynomials"},
+
+    {'r', "r", NULL, NULL, "compute random ML polys (may not be unique, can use with -n)"},
+    {'t', "t", NULL, "poly",
+        "test the specified polynomial (order is computed, not required)"},
+
+    {'v', "v", NULL, NULL, "increase verbosity"},
+    {'h', "h?", "help", NULL, "this help"},
+};
+
+
+
 //-----------------------------------------------------------------------------
 void usage(const char* argv0)
 //-----------------------------------------------------------------------------
 {
     printf("usage: %s [options] order\n", argv0);
-    printf(" generates/tests polynomials for maximal length (ML) for an LFSR\n");
-    printf("  options:\n");
-#ifdef USING_GMP
-    printf("   -b      use bignum library (GMP), may be auto-selected by order\n");
-#endif
-    printf("   -p      use symmetric pairs (faster but unsorted output)\n");
-    printf("   -c      print polynomials amended with count of taps\n");
-    printf("   -2      search for polynomials with only 2 taps for specified order\n");
-    printf("   -u int  shiftUp: for option '-f': first enabled tap. default: 0\n");
-    printf("   -f int  bruteForce: how many taps(bits) should be tested sequenctially:\n");
-    printf("           all possible combinations for taps u .. u+f-1 are tested\n");
-    printf("           default: 0 for off. limitation: all taps need to fit into 64 Bits!\n");
-    printf("   -m int  print only polynomials with number of taps <= this value\n");
-    printf("           default is -1, to print all polynomials\n");
-    printf("   -s int  start with specified polynomial (order is computed, not required)\n");
-    printf("   -e int  end with specified polynomial (order is computed, not required)\n");
-    printf("   -n int  stop after specified number of ML polynomials\n");
-    printf("   -r      compute random ML polys (may not be unique, can use with -n)\n");
-    printf("   -t int  test the specified polynomial (order is computed, not required)\n");
-    printf("   -v      increase verbosity\n");
-    printf("   -?      this help\n");
-    printf("  arguments:\n");
-    printf("    order is the unsigned integer order of the polynomials to compute\n");
+    printf("  generates/tests polynomials for maximal length (ML) for an LFSR\n");
+    printf("\noptions:\n");
+    cag_option_print(options, CAG_ARRAY_SIZE(options), stdout);
+    printf("\narguments:\n");
+    printf("  order is the unsigned integer order of the polynomials to compute\n");
 #ifndef USING_GMP
-    printf(" Compiled without bignum (GMP) support\n");
+    printf("Compiled without bignum (GMP) support\n");
 #endif
-    printf(" mlpolygen version %s", MLPOLYGEN_VERSION);
-#ifdef HG_REVISION
-    printf(", compiled at Mercurial revision %s\n", HG_REVISION);
-#else
-    printf("\n");
-#endif
+    printf("mlpolygen version %s\n", MLPOLYGEN_VERSION);
 }
 
 
@@ -392,11 +402,11 @@ typedef mpf_class big_float_t;
 #endif
 
 
+
 //-----------------------------------------------------------------------------
-int main(int argc, char* const argv[])
+int main(int argc, char* argv[])
 //-----------------------------------------------------------------------------
 {
-    int c;
     const char* argv0 = argv[0];
     int bignum = 0;
     int verbosity = 0;
@@ -412,10 +422,15 @@ int main(int argc, char* const argv[])
     const char* startVal = 0;
     const char* endVal = 0;
     unsigned long numPolys = 0;
-    
-    while ((c = getopt(argc, argv, "vbprs:e:n:t:m:u:f:2ch?")) != -1) {
-        switch (c) {
+
+    cag_option_context context;
+    cag_option_prepare(&context, options, CAG_ARRAY_SIZE(options), argc, argv);
+    while (cag_option_fetch(&context)) {
+        const char* optarg;
+        char* endp;
+        switch (cag_option_get(&context)) {
             case 't':
+                optarg = cag_option_get_value(&context);
                 if (!bignum) {
                     result += TestSinglePolynomial<reg_poly_t,reg_uint_t,reg_float_t>(optarg, verbosity);
 #ifdef USING_GMP
@@ -432,25 +447,25 @@ int main(int argc, char* const argv[])
                 printCountTaps = true;
                 break;
             case 'm':
-                maximum_taps = atoi(optarg);
+                maximum_taps = atoi(cag_option_get_value(&context));
                 break;
             case 'u':
-                shiftUp = atoi(optarg);
+                shiftUp = atoi(cag_option_get_value(&context));
                 break;
             case 'f':
-                bruteForceNumBits = atoi(optarg);
+                bruteForceNumBits = atoi(cag_option_get_value(&context));
                 break;
             case '2':
                 findTwoTaps = true;
                 break;
             case 's':
-                startVal = optarg;
+                startVal = cag_option_get_value(&context);
                 break;
             case 'e':
-                endVal = optarg;
+                endVal = cag_option_get_value(&context);
                 break;
             case 'n':
-                char* endp;
+                optarg = cag_option_get_value(&context);
                 numPolys = strtoul(optarg,&endp,0);
                 if (endp[0]) {
                     std::cerr << "Error converting to uint: " << optarg << std::endl;
@@ -477,9 +492,10 @@ int main(int argc, char* const argv[])
                 return -1;
         }
     }
+    const int optind = cag_option_get_index(&context);
     argc -= optind;
     argv += optind;
-    
+
     if (argc>1) {
         std::cerr << "Error: too many arguments" << std::endl;
         usage(argv0);

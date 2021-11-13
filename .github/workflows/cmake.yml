@@ -1,0 +1,56 @@
+name: CMake
+
+on:
+  # Trigger the workflow on push or pull request - but only for the main branch
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build-on-windows:
+    runs-on: windows-latest
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - name: Configure CMake
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: cmake -G "Visual Studio 16 2019" -A x64 -S mlpolygen -B build_mlpolygen -DWITHOUT_GMP=1
+
+    - name: Build
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: cmake --build build_mlpolygen --config $BUILD_TYPE
+
+    - name: Dir Listing
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: find . >src_listing.txt
+
+    - name: Collect files to distribute
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: |
+        cp "${{runner.workspace}}/mlpolygen/README.rst" ./
+        cp "${{runner.workspace}}/mlpolygen/LICENSE" ./
+
+    - name: package and upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: extio_rtl_tcp
+        path: |
+            ${{runner.workspace}}/README.rst
+            ${{runner.workspace}}/LICENSE
+            ${{runner.workspace}}/src_listing.txt

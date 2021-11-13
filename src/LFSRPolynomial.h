@@ -199,20 +199,24 @@ LFSRPolynomial<poly_t> LFSRPolynomial<poly_t>::SymmetricDual(void) const
     return result;
 }
 
-#include <sys/time.h>
+#include <random>
+
 
 template<typename poly_t>
 //-----------------------------------------------------------------------------
 void LFSRPolynomial<poly_t>::SetRandom(void)
 //-----------------------------------------------------------------------------
 {
-    timeval tv;
-    gettimeofday(&tv,0);
-    unsigned seed = tv.tv_usec;
-    srandom(seed);
+    std::random_device rd;
+    std::uniform_int_distribution<unsigned> dist(0);
+    const unsigned seed_value = dist(rd);
+    std::minstd_rand lcg;
+    lcg.seed(seed_value);
+
     poly = poly_t(1)<<(numBits-1);
     for (unsigned i=0; i<numBits-1; i++) {
-        poly.set(i,random()&1);
+        //poly.set(i, random() &1);
+        poly.set(i, 1 & dist(lcg));
     }
 }
 

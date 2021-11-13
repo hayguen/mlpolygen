@@ -30,6 +30,9 @@ MLPolyGen can use the GNU Multiple Precision Arithmetic Library (GMP_)
 to work with very large numbers. The larger the numbers, the more time
 it will take to compute.
 
+The home page for this package is https://github.com/hayguen/mlpolygen
+
+
 Building and Installing
 -----------------------
 
@@ -44,12 +47,10 @@ in the root of the source directory.
 
 To follow this approach::
 
- $ cd mlpolygen-1.x.x # where you put the source code
- $ mkdir -p build
- $ cd build
- $ cmake ..
- $ make
- $ sudo make install
+ $ git clone --recursive https://github.com/hayguen/mlpolygen.git
+ $ cmake -S mlpolygen -B build_mlpolygen -DCMAKE_BUILD_TYPE=Release
+ $ cmake --build build_mlpolygen
+ $ sudo cmake --build build_mlpolygen --target install
 
 Normally, MLPolyGen requires GMP_ to build so that it can support numbers larger than 64 bits.
 If GMP_ is present on your system, CMake will automatically detect and use it.
@@ -57,7 +58,16 @@ On Ubuntu 20.04.2 LTS, the required package is ``libgmp-dev``.
 If you would like to disable the dependency on GMP_,
 run CMake using the WITHOUT_GMP option as follows::
 
- $ cmake -DWITHOUT_GMP=1 ..
+ $ cmake -S mlpolygen -B build_mlpolygen -DCMAKE_BUILD_TYPE=Release -DWITHOUT_GMP=1
+
+
+For building with Visual Studio on Windows and without GMP you need some more modification, e.g.:
+
+ $ cmake -G "Visual Studio 16 2019" -A x64 -S mlpolygen -B build_mlpolygen -DWITHOUT_GMP=1
+ $ cmake --build build_mlpolygen --config Release
+
+A pre-built executable for Windows should be available with github Actions.
+
 
 Usage examples
 --------------
@@ -90,7 +100,7 @@ half the space), but it generates an unsorted output::
 
 To generate only few polynomials of a particular order::
 
- $ mlpolygen -n4 16
+ $ mlpolygen -n 4 16
  8016
  801c
  801f
@@ -107,7 +117,7 @@ To generate ML polynomials from a particular starting point::
 
 To generate a few *random* ML polynomials of a particular order::
 
- $ mlpolygen -r -n4 16
+ $ mlpolygen -r -n 4 16
  b354
  b5ab
  cca0

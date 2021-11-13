@@ -17,7 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.15)
+
+# required to enable set_property(TARGET clsocket PROPERTY  MSVC_RUNTIME_LIBRARY
+cmake_policy(SET CMP0091 NEW)
+# set(CMAKE_POLICY_DEFAULT_CMP0091 NEW)
+
 project(mlpolygen)
 
 option(WITHOUT_GMP "do not use GMP, the GNU Multiple Precision Arithmetic Library?" OFF)
@@ -25,18 +30,6 @@ option(WITHOUT_GMP "do not use GMP, the GNU Multiple Precision Arithmetic Librar
 
 # set the reported version for mlpolygen
 add_definitions("-DMLPOLYGEN_VERSION=\"1.1.0\"")
-
-# fetch the mercurial repo version, if possible
-execute_process(
-    COMMAND hg id -i
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE HG_REVISION
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-if (HG_REVISION)
-    add_definitions("-DHG_REVISION=\"${HG_REVISION}\"")
-endif (HG_REVISION)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 
@@ -69,6 +62,21 @@ include_directories(libs/PrimeFactorizer)
 add_executable(mlpolygen src/main.cc src/MLPolyTester.cc)
 add_executable(PrimeFactorizer libs/PrimeFactorizer/main.cc)
 add_executable(lfsr_s src/lfsr_s.c)
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/cargs")
+
+if ( CMAKE_C_COMPILER_ID MATCHES "MSVC" )
+    # make a static compilation with MSVC
+    set_property(TARGET mlpolygen       PROPERTY  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET PrimeFactorizer PROPERTY  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET lfsr_s          PROPERTY  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    set_property(TARGET cargs           PROPERTY  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_target_properties(cargs PROPERTIES COMPILE_FLAGS "/wd5105")
+endif()
+
+target_link_libraries(mlpolygen cargs)
+
 
 if (GMPXX_FOUND)
     include_directories(${GMPXX_INCLUDE_DIR})

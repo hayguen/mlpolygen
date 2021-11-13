@@ -45,9 +45,16 @@ in the root of the source directory.
 .. _LFSR: http://en.wikipedia.org/wiki/Linear_feedback_shift_register
 .. _GMP: http://gmplib.org/
 
-To follow this approach::
+On Ubuntu Linux, you can install GMP with::
+
+ $ sudo apt-get install -y libgmp-dev
+
+Get the sources::
 
  $ git clone --recursive https://github.com/hayguen/mlpolygen.git
+
+And build/install, following this approach::
+
  $ cmake -S mlpolygen -B build_mlpolygen -DCMAKE_BUILD_TYPE=Release
  $ cmake --build build_mlpolygen
  $ sudo cmake --build build_mlpolygen --target install
@@ -61,7 +68,7 @@ run CMake using the WITHOUT_GMP option as follows::
  $ cmake -S mlpolygen -B build_mlpolygen -DCMAKE_BUILD_TYPE=Release -DWITHOUT_GMP=1
 
 
-For building with Visual Studio on Windows and without GMP you need some more modification, e.g.:
+For building with Visual Studio on Windows and without GMP you need some more modification, e.g.::
 
  $ cmake -G "Visual Studio 16 2019" -A x64 -S mlpolygen -B build_mlpolygen -DWITHOUT_GMP=1
  $ cmake --build build_mlpolygen --config Release
@@ -148,40 +155,40 @@ take hours (days, weeks) to complete.
 To do
 -----
 
- - add a CLI switch to specify a stop polynomial value (so it could compute subsections in parallel)
+- add a CLI switch to specify a stop polynomial value (so it could compute subsections in parallel)
 
- - make sure it works on multiple platforms
+- make sure it works on multiple platforms
 
- - do some profiling to see if we can speed it up
+- do some profiling to see if we can speed it up
 
- - improve PrimeFactorizer to choose better prime candidates
+- improve PrimeFactorizer to choose better prime candidates
 
- - increase my CMake knowledge (I'm a noob)
+- increase my CMake knowledge (I'm a noob)
 
- - use CMake for testing (instead of the current Makefile)
+- use CMake for testing (instead of the current Makefile)
 
 Acknowledgements and Background
 -------------------------------
 
- - Thank you to Philip Koopman for providing his page on ML LFSR polynomials: http://www.ece.cmu.edu/~koopman/lfsr/index.html
+- Thank you to Philip Koopman for providing his page on ML LFSR polynomials: http://www.ece.cmu.edu/~koopman/lfsr/index.html
 
-   - I've used his ML polynomials as reference material for a number of years
-   
-   - The mlpolygen tester uses his polynomials for verification
-   
-   - His page pointed me to ``lfsr_s.c``
+  - I've used his ML polynomials as reference material for a number of years
+  
+  - The mlpolygen tester uses his polynomials for verification
+  
+  - His page pointed me to ``lfsr_s.c``
 
- - Thank you to the author of ``lfsr_s.c``; I believe it was authored by Scott Nelson
+- Thank you to the author of ``lfsr_s.c``; I believe it was authored by Scott Nelson
 
-   - ``lfsr_s.c`` was once located at ``ftp://helsbreth.org/pub/helsbret/random/lfsr_s.c``
+  - ``lfsr_s.c`` was once located at ``ftp://helsbreth.org/pub/helsbret/random/lfsr_s.c``
 
-   - It contained no license when I downloaded it, and I can no longer find it on the internet
+  - It contained no license when I downloaded it, and I can no longer find it on the internet
 
-   - I've included an unmodified copy of ``lfsr_s.c`` in ``mlpolygen/src``
+  - I've included an unmodified copy of ``lfsr_s.c`` in ``mlpolygen/src``
 
- - mlpolygen is based on the algorithm described in ``lfsr_s.c``
+- mlpolygen is based on the algorithm described in ``lfsr_s.c``
 
- - I wrote mlpolygen while examining ``lfsr_s.c``, so portions of mlpolygen may be very loosely based on ``lfsr_s.c``
+- I wrote mlpolygen while examining ``lfsr_s.c``, so portions of mlpolygen may be very loosely based on ``lfsr_s.c``
 
 License
 -------

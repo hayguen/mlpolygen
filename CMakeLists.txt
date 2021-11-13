@@ -72,7 +72,10 @@ if ( CMAKE_C_COMPILER_ID MATCHES "MSVC" )
     set_property(TARGET lfsr_s          PROPERTY  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
     set_property(TARGET cargs           PROPERTY  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_target_properties(cargs PROPERTIES COMPILE_FLAGS "/wd5105")
+    set_property(TARGET cargstest       PROPERTY  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    set_target_properties(cargs     PROPERTIES COMPILE_FLAGS "/wd5105")
+    set_target_properties(cargstest PROPERTIES COMPILE_FLAGS "/wd5105")
 endif()
 
 target_link_libraries(mlpolygen cargs)

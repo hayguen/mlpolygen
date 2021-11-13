@@ -1,13 +1,12 @@
 name: CMake
 
 on:
-  # Trigger the workflow on push or pull request - but only for the main branch
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -24,6 +23,9 @@ jobs:
       with:
         fetch-depth: 2
 
+    - name: Checkout submodules
+      run: git submodule update --depth 1 --init --recursive
+
     - name: Configure CMake
       working-directory: ${{runner.workspace}}
       shell: bash
@@ -34,10 +36,10 @@ jobs:
       shell: bash
       run: cmake --build build_mlpolygen --config $BUILD_TYPE
 
-    - name: Dir Listing
-      working-directory: ${{runner.workspace}}
-      shell: bash
-      run: find . >src_listing.txt
+    #- name: Dir Listing
+    #  working-directory: ${{runner.workspace}}
+    #  shell: bash
+    #  run: find . >src_listing.txt
 
     - name: Collect files to distribute
       working-directory: ${{runner.workspace}}
@@ -45,12 +47,18 @@ jobs:
       run: |
         cp "${{runner.workspace}}/mlpolygen/README.rst" ./
         cp "${{runner.workspace}}/mlpolygen/LICENSE" ./
+        cp "${{runner.workspace}}/build_mlpolygen/Release/lfsr_s.exe" ./
+        cp "${{runner.workspace}}/build_mlpolygen/Release/mlpolygen.exe" ./
+        cp "${{runner.workspace}}/build_mlpolygen/Release/PrimeFactorizer.exe" ./
+
 
     - name: package and upload
       uses: actions/upload-artifact@v2
       with:
-        name: extio_rtl_tcp
+        name: mlpolygen
         path: |
             ${{runner.workspace}}/README.rst
             ${{runner.workspace}}/LICENSE
-            ${{runner.workspace}}/src_listing.txt
+            ${{runner.workspace}}/lfsr_s.exe
+            ${{runner.workspace}}/mlpolygen.exe
+            ${{runner.workspace}}/PrimeFactorizer.exe

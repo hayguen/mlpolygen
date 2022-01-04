@@ -1,22 +1,3 @@
-..
- This file is part of MLPolyGen, a maximal-length polynomial generator
- for linear feedback shift registers.
- 
- Copyright (C) 2012  Gregory E. Allen
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 
 ===============================================
 mlpolygen - Maximal Length polynomial generator
@@ -31,6 +12,7 @@ to work with very large numbers. The larger the numbers, the more time
 it will take to compute.
 
 The home page for this package is https://github.com/hayguen/mlpolygen
+
 Earlier, it was on https://bitbucket.org/gallen/mlpolygen/ , which no
 longer exists. A backup can be found here: 
 http://web.archive.org/web/20180820105651/https://bitbucket.org/gallen/mlpolygen
@@ -177,12 +159,12 @@ To do
 
 - use CMake for testing (instead of the current Makefile)
 
-Acknowledgements and Background
--------------------------------
+Acknowledgements and Background (from Gregory Allen)
+----------------------------------------------------
 
 - Thank you to Philip Koopman for providing his page on ML LFSR polynomials: http://www.ece.cmu.edu/~koopman/lfsr/index.html
 
-  - I (Gregory Allen) have used his ML polynomials as reference material for a number of years
+  - I've used his ML polynomials as reference material for a number of years
 
   - The mlpolygen tester uses his polynomials for verification
 
@@ -200,6 +182,26 @@ Acknowledgements and Background
 
 - I wrote mlpolygen while examining ``lfsr_s.c``, so portions of mlpolygen may be very loosely based on ``lfsr_s.c``
 
+
+Background and history (from Hayati Ayguen)
+-------------------------------------------
+
+- I took the backup/.zip from http://web.archive.org/ and put it online here,
+  cause https://bitbucket.org/gallen/mlpolygen  was no longer available
+
+- Thanks to all authors and supporters, especially Gregory Allen, Scott Nelson and Philip Koopman
+
+- some of my additions:
+
+  - get to compile with Visual Studio (without GMP) and the GitHub Actions infrastructure
+
+  - 64 bit support for lfsr_s
+
+  - replaced getopt by platform independent cargs, see https://github.com/likle/cargs
+
+  - added some options: '-2', '-u shiftUp' and '-f' bruteForce - see usage
+
+
 License
 -------
 
@@ -208,3 +210,25 @@ See the file ``COPYING`` for the full license.
 
 .. _GNU: http://www.gnu.org/
 .. _GPL: http://www.gnu.org/licenses/gpl.html
+
+
+This file is part of MLPolyGen, a maximal-length polynomial generator
+for linear feedback shift registers.
+
+Copyright (C) 2012  Gregory E. Allen
+
+Copyright (C) 2021  Hayati Ayguen
+
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.

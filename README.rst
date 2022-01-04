@@ -31,6 +31,9 @@ to work with very large numbers. The larger the numbers, the more time
 it will take to compute.
 
 The home page for this package is https://github.com/hayguen/mlpolygen
+Earlier, it was on https://bitbucket.org/gallen/mlpolygen/ , which no
+longer exists. A backup can be found here: 
+http://web.archive.org/web/20180820105651/https://bitbucket.org/gallen/mlpolygen
 
 
 Building and Installing
@@ -172,10 +175,10 @@ Acknowledgements and Background
 
 - Thank you to Philip Koopman for providing his page on ML LFSR polynomials: http://www.ece.cmu.edu/~koopman/lfsr/index.html
 
-  - I've used his ML polynomials as reference material for a number of years
-  
+  - I (Gregory Allen) have used his ML polynomials as reference material for a number of years
+
   - The mlpolygen tester uses his polynomials for verification
-  
+
   - His page pointed me to ``lfsr_s.c``
 
 - Thank you to the author of ``lfsr_s.c``; I believe it was authored by Scott Nelson

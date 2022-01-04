@@ -56,6 +56,13 @@ Get the sources::
 
  $ git clone --recursive https://github.com/hayguen/mlpolygen.git
 
+In case you forgot the `--recursive` flag::
+
+  $ cd mlpolygen
+  $ git submodule init
+  $ git submodule update
+  $ cd ..
+
 And build/install, following this approach::
 
  $ cmake -S mlpolygen -B build_mlpolygen -DCMAKE_BUILD_TYPE=Release

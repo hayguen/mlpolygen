@@ -63,6 +63,15 @@ add_executable(mlpolygen src/main.cc src/MLPolyTester.cc)
 add_executable(PrimeFactorizer libs/PrimeFactorizer/main.cc)
 add_executable(lfsr_s src/lfsr_s.c)
 
+if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cargs/CMakeLists.txt")
+  message(FATAL_ERROR
+    "you forgot the '--recursive' flag at git clone\n"
+    "  you can proceed with following commands:\n"
+    "  $  git submodule init\n"
+    "  $  git submodule update"
+  )
+endif()
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/cargs")
 
 if ( CMAKE_C_COMPILER_ID MATCHES "MSVC" )

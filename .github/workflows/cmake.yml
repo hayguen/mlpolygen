@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+      - master
+    tags-ignore:
+      - 'v*'
   pull_request:
     branches:
       - main
+      - master
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -14,32 +18,29 @@ env:
 
 jobs:
   build-on-windows:
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 2
+        submodules:  recursive
 
-    - name: Checkout submodules
-      run: git submodule update --depth 1 --init --recursive
-
-    - name: Configure CMake
+    - name: Configure Visual Studio and CMake
       working-directory: ${{runner.workspace}}
-      shell: bash
-      run: cmake -G "Visual Studio 16 2019" -A x64 -S mlpolygen -B build_mlpolygen -DWITHOUT_GMP=1
+      run: |
+          # setup the compiler
+          cmd.exe /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat`" && set > %temp%\vcvars.txt"
+          Get-Content "$env:temp\vcvars.txt" | Foreach-Object { if ($_ -match "^(.*?)=(.*)$") { Set-Content "env:\$($matches[1])" $matches[2] } }
+          # run cmake
+          cmake -G "Visual Studio 16 2019" -A x64 -S mlpolygen -B build_mlpolygen -DWITHOUT_GMP=1
 
     - name: Build
       working-directory: ${{runner.workspace}}
       shell: bash
       run: cmake --build build_mlpolygen --config $BUILD_TYPE
-
-    #- name: Dir Listing
-    #  working-directory: ${{runner.workspace}}
-    #  shell: bash
-    #  run: find . >src_listing.txt
 
     - name: Collect files to distribute
       working-directory: ${{runner.workspace}}
@@ -51,9 +52,8 @@ jobs:
         cp "${{runner.workspace}}/build_mlpolygen/Release/mlpolygen.exe" ./
         cp "${{runner.workspace}}/build_mlpolygen/Release/PrimeFactorizer.exe" ./
 
-
     - name: package and upload
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: mlpolygen
         path: |
